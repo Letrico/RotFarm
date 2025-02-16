@@ -10,3 +10,7 @@ Salvage only works with alfred so please get alfred.
 
 
 Credits to Eletroluz for his helltide script that I used as a base
+
+
+# Known problemms
+The seasonal area buff detection is broken because it does not expire properly like helltide buff which makes your character continue staying in the area until it finishes one complete loop. The way to detect the changes is after every loop, we will go salvage with alfred and when it returns, the bugged season buff will disappear and it will search for new active season area
