@@ -2,7 +2,7 @@ local utils = require "core.utils"
 local tracker = require "core.tracker"
 local rotfarm_task = require "tasks.rotfarm"
 
-local current_city_index = 1
+local current_city_index = 0
 
 local rotfarm_tps = {
     {name = "Kehj_Ridge", id = 0x8C7B7, file = "tarsarak"},
@@ -58,8 +58,10 @@ local search_rotfarm_task = {
 
     teleporting_to_rotfarm = function(self)
         if not ( utils.player_in_zone(nil) or utils.player_in_zone("")) then
-            if utils.player_in_zone(rotfarm_tps[current_city_index].name) then
-                current_city_index = current_city_index + 1
+            if current_city_index > #rotfarm_tps then
+                current_city_index = 1
+            else
+                current_city_index = (current_city_index % #rotfarm_tps) + 1
             end
             -- console.print("Teleporting to: " .. tostring(rotfarm_tps[current_city_index].file))
             tracker.wait_in_town = nil
@@ -75,11 +77,6 @@ local search_rotfarm_task = {
         if utils.player_in_zone(rotfarm_tps[current_city_index].name) then
             if not tracker.check_time("wait_in_town", 3) then
                 return
-            end
-            if current_city_index > #rotfarm_tps then
-                current_city_index = 1
-            else
-                current_city_index = (current_city_index % #rotfarm_tps) + 1
             end
             self.current_state = search_rotfarm_state.SEARCHING_ROTFARM
         else
