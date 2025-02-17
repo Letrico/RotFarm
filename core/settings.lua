@@ -1,7 +1,8 @@
 local gui = require "gui"
 local settings = {
     enabled = false,
-    salvage = false
+    salvage = false,
+    path_angle = 10,
 }
 
 function settings:update_settings()
