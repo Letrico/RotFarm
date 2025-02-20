@@ -2,7 +2,7 @@ local gui = require "gui"
 local settings = {
     enabled = false,
     salvage = true,
-    path_angle = 10,
+    path_angle = 20,
     whispering_chest = true,
 }
 

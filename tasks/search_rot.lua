@@ -81,6 +81,7 @@ local search_rotfarm_task = {
             self.current_state = search_rotfarm_state.SEARCHING_ROTFARM
         else
             -- fail teleport, retry
+            tracker.clear_key('wait_in_town')
             self.current_state = search_rotfarm_state.TELEPORTING
             return
         end

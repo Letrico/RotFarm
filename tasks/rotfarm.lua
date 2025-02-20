@@ -145,8 +145,8 @@ local function check_events(self)
     -- elseif find_closest_target("VerbPrototype_VFX_ControlArea") then
     --     self.current_state = rotfarm_state.FOLLOW_PATROL
     elseif settings.whispering_chest and utils.have_whispering_key() and 
-            find_closest_target("Spider_Chest_Rare_Locked_GamblingCurrency") and 
-            find_closest_target("vfx_resplendAmbient_hardpointLight_square") 
+            (find_closest_target("Spider_Chest_Rare_Locked_GamblingCurrency") and utils.distance_to(find_closest_target("Spider_Chest_Rare_Locked_GamblingCurrency")) < 10) and 
+            (find_closest_target("vfx_resplendAmbient_hardpointLight_square") and utils.distance_to(find_closest_target("vfx_resplendAmbient_hardpointLight_square")) < 10)
     then
         self.current_state = rotfarm_state.MOVING_TO_WHISPER_CHEST
     end
@@ -166,13 +166,11 @@ local rotfarm_task = {
             revive_at_checkpoint()
         end
 
-        if Looteer then
-            local looting = Looteer.getStatus()
+        if LooteerPlugin then
+            local looting = LooteerPlugin.getSettings('looting')
             if looting then
                 explorerlite.is_task_running = true
                 return
-            else
-                explorerlite.is_task_running = false
             end
         end
 
@@ -255,8 +253,6 @@ local rotfarm_task = {
                     pathfinder.request_move(randomized_waypoint)
                 else
                     console.print("no explorer")
-                    explorer_active = false
-                    explorerlite.is_task_running = false 
                 end
             end
         end
@@ -362,12 +358,10 @@ local rotfarm_task = {
 
     interact_pyre = function(self)
         local pyre = find_closest_target("WRLD_Switch_S07_SMP_CorpsePyre_Gizmo")
-        explorerlite.is_task_running = true
-        explorer_active = false
         if pyre then
-            local try_interact_pyre = interact_object(pyre)
+            interact_object(pyre)
             -- console.print("Pyre interaction result: " .. tostring(try_interact_pyre))
-            if try_interact_pyre then
+            if find_closest_target("S07_SMP_CorpsePyre_Monster") then
                 self.current_state = rotfarm_state.STAY_NEAR_PYRE
             end
         else
@@ -377,7 +371,8 @@ local rotfarm_task = {
 
     stay_near_pyre = function(self)
         local pyre = find_closest_target("WRLD_Switch_S07_SMP_CorpsePyre_Gizmo")
-        if pyre then
+        local pyre_monster = find_closest_target("S07_SMP_CorpsePyre_Monster")
+        if pyre and pyre_monster then
             if utils.distance_to(pyre) > 3 then
                 -- console.print(string.format("Stay near pyre"))
                 explorerlite.is_task_running = false
@@ -438,6 +433,7 @@ local rotfarm_task = {
 
     go_to_nearest_coordinate = function(self)
         check_events(self)
+        tracker.clear_key('chest_drop_time')
         local nearest_ni = find_closest_waypoint_index(tracker.waypoints)
         if nearest_ni and math.abs(nearest_ni - ni) > 5 then
             ni = nearest_ni
@@ -473,6 +469,7 @@ local rotfarm_task = {
         tracker.has_salvaged = false
         console.print("Restart rotfarm")
         ni = 1
+        tracker.clear_key('salvage_return_time')
         self.current_state = rotfarm_state.EXPLORE_ROTFARM
     end,
 
