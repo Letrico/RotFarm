@@ -145,8 +145,8 @@ local function check_events(self)
     -- elseif find_closest_target("VerbPrototype_VFX_ControlArea") then
     --     self.current_state = rotfarm_state.FOLLOW_PATROL
     elseif settings.whispering_chest and utils.have_whispering_key() and 
-            (find_closest_target("Spider_Chest_Rare_Locked_GamblingCurrency") and utils.distance_to(find_closest_target("Spider_Chest_Rare_Locked_GamblingCurrency")) < 10) and 
-            (find_closest_target("vfx_resplendAmbient_hardpointLight_square") and utils.distance_to(find_closest_target("vfx_resplendAmbient_hardpointLight_square")) < 10)
+            (find_closest_target("Spider_Chest_Rare_Locked_GamblingCurrency") and utils.distance_to(find_closest_target("Spider_Chest_Rare_Locked_GamblingCurrency")) < 15) and 
+            (find_closest_target("vfx_resplendAmbient_hardpointLight_square") and utils.distance_to(find_closest_target("vfx_resplendAmbient_hardpointLight_square")) < 15)
     then
         self.current_state = rotfarm_state.MOVING_TO_WHISPER_CHEST
     end
