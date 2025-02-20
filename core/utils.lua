@@ -53,4 +53,18 @@ function utils.is_in_rotfarm()
     return false
 end
 
+function utils.have_whispering_key()
+    local inventory = get_local_player():get_consumable_items()
+    for _, item in pairs(inventory) do
+        local item_info = utils.get_consumable_info(item)
+        if item_info then
+            if item_info.name == "GamblingCurrency_Key" then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
 return utils

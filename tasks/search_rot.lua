@@ -75,7 +75,7 @@ local search_rotfarm_task = {
 
     waiting_for_teleport = function(self)
         if utils.player_in_zone(rotfarm_tps[current_city_index].name) then
-            if not tracker.check_time("wait_in_town", 3) then
+            if not tracker.check_time("wait_in_town", 4) then
                 return
             end
             self.current_state = search_rotfarm_state.SEARCHING_ROTFARM

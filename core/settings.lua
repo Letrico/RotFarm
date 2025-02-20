@@ -1,13 +1,15 @@
 local gui = require "gui"
 local settings = {
     enabled = false,
-    salvage = false,
+    salvage = true,
     path_angle = 10,
+    whispering_chest = true,
 }
 
 function settings:update_settings()
     settings.enabled = gui.elements.main_toggle:get()
-    settings.salvage = gui.elements.salvage_toggle:get() -- Change this line
+    settings.salvage = gui.elements.salvage_toggle:get()
+    settings.whispering_chest = gui.elements.whisper_chest_toggle:get()
 end
 
 return settings

@@ -12,6 +12,7 @@ local rotfarm_state = {
     MOVING_TO_PYRE = "MOVING_TO_PYRE",
     INTERACT_PYRE = "INTERACT_PYRE",
     STAY_NEAR_PYRE = "STAY_NEAR_PYRE",
+    MOVING_TO_WHISPER_CHEST = "MOVING_TO_WHISPER_CHEST",
     -- FOLLOW_PATROL = "FOLLOW_PATROL",
     GO_NEAREST_COORDINATE = "GO_NEAREST_COORDINATE",
     BACK_TO_TOWN = "BACK_TO_TOWN"
@@ -136,6 +137,21 @@ local function randomize_waypoint(waypoint, max_offset)
     end
 end
 
+local function check_events(self)
+    if find_closest_target("S07_WitchHunt_GnarledCocoon_Trigger") or find_closest_target("S07_GnarledCocoon_Large_IconProxy") then
+        self.current_state = rotfarm_state.MOVING_TO_COCOON
+    elseif find_closest_target("WRLD_Switch_S07_SMP_CorpsePyre_Gizmo") then
+        self.current_state = rotfarm_state.MOVING_TO_PYRE
+    -- elseif find_closest_target("VerbPrototype_VFX_ControlArea") then
+    --     self.current_state = rotfarm_state.FOLLOW_PATROL
+    elseif settings.whispering_chest and utils.have_whispering_key() and 
+            find_closest_target("Spider_Chest_Rare_Locked_GamblingCurrency") and 
+            find_closest_target("vfx_resplendAmbient_hardpointLight_square") 
+    then
+        self.current_state = rotfarm_state.MOVING_TO_WHISPER_CHEST
+    end
+end
+
 local rotfarm_task = {
     name = "Explore Rotfarm",
     current_state = rotfarm_state.INIT,
@@ -146,6 +162,19 @@ local rotfarm_task = {
 
     Execute = function(self)
         -- console.print("Current state: " .. self.current_state)
+        if get_local_player() and get_local_player():is_dead() then
+            revive_at_checkpoint()
+        end
+
+        if Looteer then
+            local looting = Looteer.getStatus()
+            if looting then
+                explorerlite.is_task_running = true
+                return
+            else
+                explorerlite.is_task_running = false
+            end
+        end
 
         if tracker.has_salvaged then
             self:return_from_salvage()
@@ -165,6 +194,8 @@ local rotfarm_task = {
             self:interact_pyre()
         elseif self.current_state == rotfarm_state.STAY_NEAR_PYRE then
             self:stay_near_pyre()
+        elseif self.current_state == rotfarm_state.MOVING_TO_WHISPER_CHEST then
+            self:move_to_whisper_chest()
         -- elseif self.current_state == rotfarm_state.FOLLOW_PATROL then
         --     self:follow_patrol()
         elseif self.current_state == rotfarm_state.GO_NEAREST_COORDINATE then
@@ -196,13 +227,7 @@ local rotfarm_task = {
             return
         end
 
-        if find_closest_target("S07_WitchHunt_GnarledCocoon_Trigger") or find_closest_target("S07_GnarledCocoon_Large_IconProxy") then
-            self.current_state = rotfarm_state.MOVING_TO_COCOON
-        elseif find_closest_target("WRLD_Switch_S07_SMP_CorpsePyre_Gizmo") then
-            self.current_state = rotfarm_state.MOVING_TO_PYRE
-        -- elseif find_closest_target("VerbPrototype_VFX_ControlArea") then
-        --     self.current_state = rotfarm_state.FOLLOW_PATROL
-        end
+        check_events(self)
 
         local nearest_ni = find_closest_waypoint_index(tracker.waypoints)
         if nearest_ni and math.abs(nearest_ni - ni) > 5 then
@@ -230,6 +255,8 @@ local rotfarm_task = {
                     pathfinder.request_move(randomized_waypoint)
                 else
                     console.print("no explorer")
+                    explorer_active = false
+                    explorerlite.is_task_running = false 
                 end
             end
         end
@@ -240,7 +267,7 @@ local rotfarm_task = {
         local big_cocoon = find_closest_target("S07_GnarledCocoon_Large_IconProxy")
         if target_cocoon then 
             if utils.distance_to(target_cocoon) > 2 then
-                console.print(string.format("Moving to cocoon"))
+                -- console.print(string.format("Moving to cocoon"))
                 explorerlite.is_task_running = false
                 explorer_active = true
                 explorerlite:set_custom_target(target_cocoon:get_position())
@@ -254,7 +281,7 @@ local rotfarm_task = {
             if utils.distance_to(big_cocoon) > 2 then
                 explorerlite.is_task_running = false
                 explorer_active = true
-                console.print(string.format("Moving to big cocoon"))
+                -- console.print(string.format("Moving to big cocoon"))
                 explorerlite:set_custom_target(big_cocoon:get_position())
                 explorerlite:move_to_target()
                 -- pathfinder.force_move(big_cocoon:get_position())
@@ -289,7 +316,7 @@ local rotfarm_task = {
         local target_cocoon = find_closest_target("S07_WitchHunt_GnarledCocoon_Trigger")
         if big_cocoon  then
             if utils.distance_to(big_cocoon) > 3 then
-                console.print(string.format("Stay near big cocoon"))
+                -- console.print(string.format("Stay near big cocoon"))
                 explorerlite.is_task_running = false
                 explorer_active = true
                 explorerlite:set_custom_target(big_cocoon:get_position())
@@ -299,7 +326,7 @@ local rotfarm_task = {
             end
         elseif target_cocoon then
             if utils.distance_to(target_cocoon) > 3 then
-                console.print(string.format("Stay near small cocoon"))
+                -- console.print(string.format("Stay near small cocoon"))
                 explorerlite.is_task_running = false
                 explorer_active = true
                 explorerlite:set_custom_target(target_cocoon:get_position())
@@ -318,7 +345,7 @@ local rotfarm_task = {
         local pyre = find_closest_target("WRLD_Switch_S07_SMP_CorpsePyre_Gizmo")
         if pyre then 
             if utils.distance_to(pyre) > 2 then
-                console.print(string.format("Moving to pyre"))
+                -- console.print(string.format("Moving to pyre"))
                 explorerlite.is_task_running = false
                 explorer_active = true
                 explorerlite:set_custom_target(pyre:get_position())
@@ -329,7 +356,7 @@ local rotfarm_task = {
                 self.current_state = rotfarm_state.INTERACT_PYRE
             end
         else
-            self.current_state = rotfarm_state.EXPLORE_ROTFARM
+            self.current_state = rotfarm_state.GO_NEAREST_COORDINATE
         end
     end,
 
@@ -344,7 +371,7 @@ local rotfarm_task = {
                 self.current_state = rotfarm_state.STAY_NEAR_PYRE
             end
         else
-            self.current_state = rotfarm_state.EXPLORE_ROTFARM
+            self.current_state = rotfarm_state.GO_NEAREST_COORDINATE
         end
     end,
 
@@ -352,7 +379,7 @@ local rotfarm_task = {
         local pyre = find_closest_target("WRLD_Switch_S07_SMP_CorpsePyre_Gizmo")
         if pyre then
             if utils.distance_to(pyre) > 3 then
-                console.print(string.format("Stay near pyre"))
+                -- console.print(string.format("Stay near pyre"))
                 explorerlite.is_task_running = false
                 explorer_active = true
                 explorerlite:set_custom_target(pyre:get_position())
@@ -363,7 +390,7 @@ local rotfarm_task = {
                 self.current_state = rotfarm_state.INTERACT_PYRE
             end
         else
-            self.current_state = rotfarm_state.EXPLORE_ROTFARM
+            self.current_state = rotfarm_state.GO_NEAREST_COORDINATE
         end
     end,
 
@@ -386,7 +413,31 @@ local rotfarm_task = {
     --     end
     -- end,
 
+    move_to_whisper_chest = function(self)
+        local chest = find_closest_target("Spider_Chest_Rare_Locked_GamblingCurrency")
+        local chest_unopened = find_closest_target("vfx_resplendAmbient_hardpointLight_square")
+        if chest and chest_unopened then 
+            if utils.distance_to(chest_unopened) > 2 then
+                -- console.print(string.format("Moving to chest"))
+                explorerlite.is_task_running = false
+                explorer_active = true
+                explorerlite:set_custom_target(chest_unopened:get_position())
+                explorerlite:move_to_target()
+                -- pathfinder.force_move(chest:get_position())
+                return
+            else
+                interact_object(chest)
+            end
+        else
+            if not tracker.check_time("chest_drop_time", 4) then
+                return
+            end
+            self.current_state = rotfarm_state.GO_NEAREST_COORDINATE
+        end
+    end,
+
     go_to_nearest_coordinate = function(self)
+        check_events(self)
         local nearest_ni = find_closest_waypoint_index(tracker.waypoints)
         if nearest_ni and math.abs(nearest_ni - ni) > 5 then
             ni = nearest_ni
@@ -417,7 +468,6 @@ local rotfarm_task = {
 
     return_from_salvage = function(self)
         if not tracker.check_time("salvage_return_time", 3) then
-            console.print("Waiting before resuming rotfarm")
             return
         end
         tracker.has_salvaged = false
