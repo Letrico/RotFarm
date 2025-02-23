@@ -1,5 +1,5 @@
 local gui = {}
-local version = "v0.4"
+local version = "v0.6"
 local plugin_label = "rot_farmer"
 
 local function create_checkbox(value, key)

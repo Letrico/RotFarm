@@ -13,6 +13,7 @@ local rotfarm_state = {
     INTERACT_PYRE = "INTERACT_PYRE",
     STAY_NEAR_PYRE = "STAY_NEAR_PYRE",
     MOVING_TO_WHISPER_CHEST = "MOVING_TO_WHISPER_CHEST",
+    FIGHT_HUSK = "FIGHT_HUSK",
     -- FOLLOW_PATROL = "FOLLOW_PATROL",
     GO_NEAREST_COORDINATE = "GO_NEAREST_COORDINATE",
     BACK_TO_TOWN = "BACK_TO_TOWN"
@@ -136,6 +137,8 @@ end
 local function check_events(self)
     if find_closest_target("S07_WitchHunt_GnarledCocoon_Trigger") or find_closest_target("S07_GnarledCocoon_Large_IconProxy") then
         self.current_state = rotfarm_state.MOVING_TO_COCOON
+    elseif find_closest_target(".*S07.*Boss.*") then
+        self.current_state = rotfarm_state.FIGHT_HUSK
     elseif find_closest_target("WRLD_Switch_S07_SMP_CorpsePyre_Gizmo") and find_closest_target("WRLD_Switch_S07_SMP_CorpsePyre_Gizmo"):is_interactable() then
         self.current_state = rotfarm_state.MOVING_TO_PYRE
     -- elseif find_closest_target("VerbPrototype_VFX_ControlArea") then
@@ -173,6 +176,8 @@ local rotfarm_task = {
 
         if tracker.has_salvaged then
             self:return_from_salvage()
+        elseif utils.is_inventory_full() then
+            self:back_to_town()
         elseif self.current_state == rotfarm_state.INIT then
             self:initiate_waypoints()
         elseif self.current_state == rotfarm_state.EXPLORE_ROTFARM then
@@ -193,6 +198,8 @@ local rotfarm_task = {
             self:move_to_whisper_chest()
         -- elseif self.current_state == rotfarm_state.FOLLOW_PATROL then
         --     self:follow_patrol()
+        elseif self.current_state == rotfarm_state.FIGHT_HUSK then
+            self:fight_husk()
         elseif self.current_state == rotfarm_state.GO_NEAREST_COORDINATE then
             self:go_to_nearest_coordinate()
         elseif self.current_state == rotfarm_state.BACK_TO_TOWN then
@@ -438,6 +445,23 @@ local rotfarm_task = {
         end
     end,
 
+    fight_husk = function (self)
+        local husk = find_closest_target(".*S07.*Boss.*")
+        if husk and husk:get_current_health() > 1 then
+            if utils.distance_to(husk) > 2 then
+                -- console.print(string.format("Moving to husk"))
+                explorerlite.is_task_running = false
+                explorer_active = true
+                explorerlite:set_custom_target(husk:get_position())
+                explorerlite:move_to_target()
+                -- pathfinder.force_move(husk:get_position())
+                return
+            end
+        else
+            self.current_state = rotfarm_state.GO_NEAREST_COORDINATE
+        end
+    end,
+
     go_to_nearest_coordinate = function(self)
         check_events(self)
         tracker.clear_key('chest_drop_time')
@@ -462,7 +486,7 @@ local rotfarm_task = {
     back_to_town = function(self)
         explorerlite.is_task_running = true
         explorer_active = false
-        console.print("Rotfarm completes")
+        -- console.print("Rotfarm completes")
         tracker.rotfarm_end = true
         -- completed one round, use alfred town task to reset season buff check
         if settings.salvage then
